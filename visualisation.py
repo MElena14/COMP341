@@ -1,6 +1,13 @@
 import numpy as np
 from numpy import cos, sin
-from google.colab.patches import cv2_imshow
+
+import cv2
+try:
+    from google.colab.patches import cv2_imshow
+    IN_COLAB = True
+except:
+    cv2_imshow = cv2.imshow
+    IN_COLAB = False
 
 
 
