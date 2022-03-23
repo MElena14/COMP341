@@ -52,7 +52,7 @@ def compare_grasps(rect1, rect2):
         print("angle of rotation between ground truth grasp and predicted grasp is greater than 30 degrees, this is a poor grasp estimation")
         print()
     if score < 0.25:
-        print("The Jaccard is less than 25%, this is a poor grasp estimation")
+        print("The Jaccard index is less than 25%, this is a poor grasp estimation")
     from matplotlib import pyplot
     from descartes import PolygonPatch
     
@@ -66,5 +66,7 @@ def compare_grasps(rect1, rect2):
     ax.add_patch(PolygonPatch(r1.intersection(r2), fc='#009900', alpha=1))
     
     pyplot.show()
+a = [567.16686, 545.16015, 50.0129, 145.5, 25.4924 ]
 
-#compare_grasps([605.17693, 580.6464, -45, 186.0, 77.1998], [599.86786, 500.52308, 250,170.0, 95.7251])
+b = [ 524.1098, 544.7016 , 57.21771 , 263.99756, -162.15486]
+#compare_grasps(a, b)
