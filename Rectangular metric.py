@@ -1,5 +1,6 @@
 import shapely.geometry
 import shapely.affinity
+import math
 
 class RotatedRect:
     def __init__(self, centerx, centery, angle, width, height):
@@ -31,7 +32,11 @@ def compare_grasps(rect1, rect2):
     angle2 = rect2[2]
     w2 = rect2[3]
     h2 = rect2[4]
-    
+    if angle1 < 0:
+        angle1 = 360 + angle1 
+    if angle2 < 0:
+        angle2 = 360 + angle2
+        
     r1 = RotatedRect(cx1, cy1, angle1, w1, h1)
     r2 = RotatedRect(cx2, cy2, angle2, w2, h2)
     
@@ -42,7 +47,12 @@ def compare_grasps(rect1, rect2):
     print("intersection area: ", intersection)
     print("union area: ", union)
     print("score: ", score)
-    
+    print()
+    if math.fabs(angle1 - angle2) > 30:
+        print("angle of rotation between ground truth grasp and predicted grasp is greater than 30 degrees, this is a poor grasp estimation")
+        print()
+    if score < 0.25:
+        print("The Jaccard is less than 25%, this is a poor grasp estimation")
     from matplotlib import pyplot
     from descartes import PolygonPatch
     
@@ -57,4 +67,4 @@ def compare_grasps(rect1, rect2):
     
     pyplot.show()
 
-#compare_grasps([605.17693, 550.6464, 0, 186.0, 77.1998], [599.86786, 541.52308, 7.896,170.0, 95.7251])
+#compare_grasps([605.17693, 580.6464, -45, 186.0, 77.1998], [599.86786, 500.52308, 250,170.0, 95.7251])
