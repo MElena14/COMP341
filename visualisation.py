@@ -2,19 +2,17 @@ import numpy as np
 from numpy import cos, sin
 
 import cv2
-try:
-    from google.colab.patches import cv2_imshow
-    IN_COLAB = True
-except:
-    cv2_imshow = cv2.imshow
-    IN_COLAB = False
+# try:
+#     from google.colab.patches import cv2_imshow
+#     IN_COLAB = True
+# except:
+#     cv2_imshow = cv2.imshow
+#     IN_COLAB = False
 
 
 
 
 def draw_box(image,center_point, rotate, width, height, color):
-
-
     angle = np.radians(rotate)
     # Determine the coordinates of the 4 corner points
     rotated_rect_points = []
@@ -60,35 +58,64 @@ def rotated_rectangle(image, predicted, correct, thickness,):
 
 
 
-# Prediction array [Χ, Υ, angle, width, height, color ]
+# # Prediction array [Χ, Υ, angle, width, height, color ]
 
-correct = np.array([671.37889, 747.50826, 66.6416, 18.0, 81.4823])
-prediction = np.array([470.14815, 253.89551, 68.2615, 25.5, 25.6211])
+# correct = np.array([671.37889, 747.50826, 66.6416, 18.0, 81.4823])
+# prediction = np.array([470.14815, 253.89551, 68.2615, 25.5, 25.6211])
 
-img = cv2.imread('/content/0_1a9fa4c269cfcc1b738e43095496b061_RGB.png')
-
-
+# img = cv2.imread('/content/0_1a9fa4c269cfcc1b738e43095496b061_RGB.png')
 
 
-rotated_rectangle(img, prediction, correct, 2)
 
-# Second try
-center_point2 = 671.37889,747.50826
-angle2 = 66.6416
-width2 = 18.0
-height2 = 81.4823
-color = list(np.random.random(size=3) * 256)
-thickness = 2
 
-#rotated_rectangle(img, center_point2, height2, width2, color, thickness, angle2)
+# rotated_rectangle(img, prediction, correct, 2)
 
-# Third Try
+# # Second try
+# center_point2 = 671.37889,747.50826
+# angle2 = 66.6416
+# width2 = 18.0
+# height2 = 81.4823
+# color = list(np.random.random(size=3) * 256)
+# thickness = 2
 
-center_point3 = 621.03369,479.57938
-angle3 = -23.38
-width3 = 19.5
-height3 = 12.9206
-color = list(np.random.random(size=3) * 256)
-thickness = 2
+# #rotated_rectangle(img, center_point2, height2, width2, color, thickness, angle2)
+
+# # Third Try
+
+# center_point3 = 621.03369,479.57938
+# angle3 = -23.38
+# width3 = 19.5
+# height3 = 12.9206
+# color = list(np.random.random(size=3) * 256)
+# thickness = 2
 
 #rotated_rectangle(img, center_point3, height3, width3, color, thickness, angle3)
+
+
+#from google.colab.patches.cv2_imshow
+from IPython import display
+import PIL
+import torch
+
+"""A replacement for cv2.imshow() for use in Jupyter notebooks.
+
+  Args:
+    a : np.ndarray. shape (N, M) or (N, M, 1) is an NxM grayscale image. shape
+      (N, M, 3) is an NxM BGR color image. shape (N, M, 4) is an NxM BGRA color
+      image.
+"""
+def cv2_imshow(a):
+  if torch.is_tensor(a) or isinstance(a, numpy.ndarray):
+    if torch.is_tensor(a):
+        a = a.cpu().numpy()
+    a = a.clip(0, 255).astype('uint8')
+    # cv2 stores colors as BGR; convert to RGB
+    if a.ndim == 3:
+      if a.shape[2] == 4:
+        a = cv2.cvtColor(a, cv2.COLOR_BGRA2RGBA)
+      else:
+        a = cv2.cvtColor(a, cv2.COLOR_BGR2RGB)
+    img = PIL.Image.fromarray(a)
+  else:
+    img = a
+  display.display(img)
