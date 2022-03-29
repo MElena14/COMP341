@@ -1,16 +1,14 @@
 import numpy as np
 from numpy import cos, sin
 
+from IPython import display
+import PIL
+import matplotlib.pyplot as plt
+from descartes import PolygonPatch
+import torch
 import cv2
-# try:
-#     from google.colab.patches import cv2_imshow
-#     IN_COLAB = True
-# except:
-#     cv2_imshow = cv2.imshow
-#     IN_COLAB = False
 
-
-
+from rect_metric import RotatedRect, compare_grasps
 
 def draw_box(image,center_point, rotate, width, height, color):
     angle = np.radians(rotate)
@@ -29,73 +27,25 @@ def draw_box(image,center_point, rotate, width, height, color):
     y = center_point[1] + ((width / 2) * sin(angle)) - ((height / 2) * cos(angle))
     rotated_rect_points.append([x,y])
 
-    rotatedImg = cv2.polylines(image, np.array([rotated_rect_points], np.int32), True, color, thickness)
+    rotatedImg = cv2.polylines(image, np.array([rotated_rect_points], np.int32), True, color)
     return rotatedImg
 
 
-def rotated_rectangle(image, predicted, correct, thickness,):
+def rotated_rectangle(image, predicted, correct):
+    if torch.is_tensor(image):
+      image = UnNormalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))(image)
+      image = image.permute(1, 2, 0).numpy().astype('uint8')
+      image = cv2.cvtColor(cv2.cvtColor(image, cv2.COLOR_RGB2BGR), cv2.COLOR_BGR2RGB)
 
-    predictedColor = (0, 255 ,0)
-    predicted_center_point = predicted[0],predicted[1]
-    predicted_rotate = predicted[2]
-    predicted_width = predicted[3]
-    predicted_height = predicted[4]
+    color = (0, 255, 0)
+    x, y, angle, width, height = predicted
+    predicted_result = draw_box(image, (x,y), angle, width, height, color)
 
-    predicted_result = draw_box(image, predicted_center_point, predicted_rotate, predicted_width, predicted_height, predictedColor)
-
-    correctColor = (0, 0 ,255)
-    correct_center_point = correct[0],correct[1]
-    correct_rotate = correct[2]
-    correct_width = correct[3]
-    correct_height = correct[4]
-
-    final = draw_box(predicted_result, correct_center_point, correct_rotate, correct_width, correct_height, correctColor)
-
+    color = (0, 0, 255)
+    x, y, angle, width, height = correct
+    final = draw_box(predicted_result, (x,y), angle, width, height, color)
+    print('score =', compare_grasps(predicted, correct))
     cv2_imshow(final)
-
-
-
-
-
-
-# # Prediction array [Χ, Υ, angle, width, height, color ]
-
-# correct = np.array([671.37889, 747.50826, 66.6416, 18.0, 81.4823])
-# prediction = np.array([470.14815, 253.89551, 68.2615, 25.5, 25.6211])
-
-# img = cv2.imread('/content/0_1a9fa4c269cfcc1b738e43095496b061_RGB.png')
-
-
-
-
-# rotated_rectangle(img, prediction, correct, 2)
-
-# # Second try
-# center_point2 = 671.37889,747.50826
-# angle2 = 66.6416
-# width2 = 18.0
-# height2 = 81.4823
-# color = list(np.random.random(size=3) * 256)
-# thickness = 2
-
-# #rotated_rectangle(img, center_point2, height2, width2, color, thickness, angle2)
-
-# # Third Try
-
-# center_point3 = 621.03369,479.57938
-# angle3 = -23.38
-# width3 = 19.5
-# height3 = 12.9206
-# color = list(np.random.random(size=3) * 256)
-# thickness = 2
-
-#rotated_rectangle(img, center_point3, height3, width3, color, thickness, angle3)
-
-
-#from google.colab.patches.cv2_imshow
-from IPython import display
-import PIL
-import torch
 
 """A replacement for cv2.imshow() for use in Jupyter notebooks.
 
@@ -105,7 +55,7 @@ import torch
       image.
 """
 def cv2_imshow(a):
-  if torch.is_tensor(a) or isinstance(a, numpy.ndarray):
+  if torch.is_tensor(a) or isinstance(a, np.ndarray):
     if torch.is_tensor(a):
         a = a.cpu().numpy()
     a = a.clip(0, 255).astype('uint8')
@@ -119,3 +69,43 @@ def cv2_imshow(a):
   else:
     img = a
   display.display(img)
+
+# functions to show an image
+def imshow(img):
+    """
+    :param img: (PyTorch Tensor)
+    """
+    if torch.is_tensor(img):
+      # unnormalize
+      img = img / 2 + 0.5     
+      # Convert tensor to numpy array
+      img = img.numpy()
+      # Color channel first -> color channel last
+      img = np.transpose(img, (1, 2, 0))
+    plt.imshow(img)
+    plt.grid(False)
+    plt.axis('off')
+
+def visul_grasps(rect1, rect2):
+    r1 = RotatedRect(*rect1)
+    r2 = RotatedRect(*rect2)
+    print("score: ", compare_grasps(rect1, rect2))
+    
+    fig = plt.figure(1, figsize=(10, 4))
+    ax = fig.add_subplot(121)
+    ax.set_xlim(500, 800)
+    ax.set_ylim(400, 700)
+    ax.add_patch(PolygonPatch(r1.get_contour(), fc='#990000', alpha=0.7))
+    ax.add_patch(PolygonPatch(r2.get_contour(), fc='#000099', alpha=0.7))
+    ax.add_patch(PolygonPatch(r1.intersection(r2), fc='#009900', alpha=1))
+    plt.show()
+
+class UnNormalize(object):
+  def __init__(self, mean, std):
+      self.mean = mean
+      self.std = std
+
+  def __call__(self, tensor):
+      for t, m, s in zip(tensor, self.mean, self.std):
+          t.mul_(s).add_(m)
+      return tensor * 256
