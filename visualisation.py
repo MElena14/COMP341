@@ -77,7 +77,7 @@ def imshow(img):
     """
     if torch.is_tensor(img):
       # unnormalize
-      img = UnNormalize(0.5, 0.5, return_int=False)(img)
+      img = UnNormalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5), return_int=False)(img)
       # Convert tensor to numpy array
       img = img.numpy()
       # Color channel first -> color channel last
