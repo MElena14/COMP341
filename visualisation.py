@@ -77,7 +77,7 @@ def imshow(img):
     """
     if torch.is_tensor(img):
       # unnormalize
-      img = img / 2 + 0.5     
+      img = UnNormalize(0.5, 0.5, return_int=False)(img)
       # Convert tensor to numpy array
       img = img.numpy()
       # Color channel first -> color channel last
@@ -101,11 +101,15 @@ def visul_grasps(rect1, rect2):
     plt.show()
 
 class UnNormalize(object):
-  def __init__(self, mean, std):
+  def __init__(self, mean, std, return_int=True):
       self.mean = mean
       self.std = std
+      self.return_int = return_int
 
   def __call__(self, tensor):
       for t, m, s in zip(tensor, self.mean, self.std):
           t.mul_(s).add_(m)
-      return tensor * 256
+      if self.return_int:
+        return tensor * 256
+      else:
+        return tensor
