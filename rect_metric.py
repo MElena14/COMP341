@@ -1,5 +1,6 @@
 import shapely.geometry
 import shapely.affinity
+import torch
 
 class RotatedRect:
     def __init__(self, centerx, centery, angle, width, height):
@@ -28,8 +29,14 @@ def compare_grasps(rect1, rect2):
     score = intersection/union
     return abs(score)
 
-def grasp_accuracy(Ys, Y_hats):
-    scores = [compare_grasps(Ys[i], Y_hats[i]) for i, g in enumerate(Ys)]
+def find_max_accuracy(Y, allGrasps):
+    scores = torch.zeros(len(allGrasps))
+    for i, grasp in enumerate(allGrasps):
+        scores[i] = compare_grasps(Y, grasp)
+    return torch.max(scores)
+
+def grasp_accuracy(Ys, allGrasps):
+    scores = [find_max_accuracy(Y, allGrasps[i]) for i, Y in enumerate(Ys)]
     avg = lambda x: sum(x)/len(x)
     return avg(scores)
 
@@ -52,5 +59,3 @@ def visul_grasps(rect1, rect2):
     ax.add_patch(PolygonPatch(r1.intersection(r2), fc='#009900', alpha=1))
     
     pyplot.show()
-
-
