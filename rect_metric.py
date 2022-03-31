@@ -35,10 +35,13 @@ def find_max_accuracy(Y, allGrasps):
         scores[i] = compare_grasps(Y, grasp)
     return torch.max(scores)
 
-def grasp_accuracy(Ys, allGrasps):
+def grasp_accuracy(Ys, allGrasps, average=True):
     scores = [find_max_accuracy(Y, allGrasps[i]) for i, Y in enumerate(Ys)]
-    avg = lambda x: sum(x)/len(x)
-    return avg(scores)
+    if average:
+        avg = lambda x: sum(x)/len(x)
+        return avg(scores)
+    else:
+        return scores
 
 
 def visul_grasps(rect1, rect2):
